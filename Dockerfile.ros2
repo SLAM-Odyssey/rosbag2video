@@ -16,4 +16,8 @@ RUN adduser --quiet --disabled-password user
 RUN chown -R user:user /rosbag2video_workspace
 USER user
 
+RUN echo "source /opt/ros/humble/setup.bash" >> /ros_entrypoint.sh \
+    && echo "source /rosbag2video_workspace/install/setup.bash" >> /ros_entrypoint.sh \
+    && echo "exec \"\$@\"" >> /ros_entrypoint.sh
+
 ENTRYPOINT ["/ros_entrypoint.sh"]

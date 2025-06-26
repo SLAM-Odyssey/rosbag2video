@@ -116,6 +116,7 @@ def save_image_from_rosbag(
     connection: Connection,
     input_msg_type: str,
     message_index: int = 0,
+    frames_folder: str = "frames",
 ) -> None:
     """
     Save an image from a ROS bag.
@@ -148,8 +149,9 @@ def save_image_from_rosbag(
         else:
             cv_image = cvbridge.imgmsg_to_cv2(msg, desired_encoding="passthrough")
 
+
         padded_number = f"{message_index:07d}"
-        output_filename = f"frames/{padded_number}{image_file_type}"
+        output_filename = f"{frames_folder}/{padded_number}{image_file_type}"
         cv2.imwrite(output_filename, cv_image)
         break
     else:
@@ -242,6 +244,7 @@ def create_video_from_images(image_folder: str, output_video: str, pix_fmt: str,
     with open(image_list_file, "w", encoding="utf-8") as f:
         for path in images:
             f.write(f"file '{path}'\n")
+            
 
     # Build the ffmpeg command
     command = [
@@ -387,12 +390,15 @@ if __name__ == "__main__":
 
         # else do the image export stuff - extract frames, then ffmpeg concat
         FRAMES_FOLDER = "frames"
+        if not args.save_images:
+            FRAMES_FOLDER = "/frames"
+        
         check_and_create_folder(FRAMES_FOLDER)
         clear_folder_if_non_empty(FRAMES_FOLDER)
 
         bridge = CvBridge()
         for i in range(message_count if args.frames < 0 else min(message_count, args.frames)):
-            save_image_from_rosbag(bridge, reader, conn, msg_type, i)
+            save_image_from_rosbag(bridge, reader, conn, msg_type, i, FRAMES_FOLDER)
             print(f"[INFO] - Extracting [{i+1}/{message_count}] …", end="\r")
             sys.stdout.flush()
 
